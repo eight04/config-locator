@@ -1,40 +1,20 @@
 /* eslint-env mocha */
 const assert = require("assert");
 // const sinon = require("sinon");
-const temp = require("temporarily");
-
-function buildDir(name, children) {
-  if (typeof name !== "string") {
-    children = name;
-    name = undefined;
-  }
-  return temp.dir(
-    {name},
-    children.map(c => {
-      if (typeof c === "string") {
-        return temp.file({name: c});
-      }
-      const [name, data] = c;
-      if (typeof data === "string") {
-        return temp.file({name, data});
-      }
-      return buildDir(name, data);
-    })
-  );
-}
+// const temp = require("temporarily");
+const {makeDir} = require("tempdir-yaml");
 
 describe("find config", () => {
-  const path = require("path");
   const {findConfig} = require("..");
   
   function test(options) {
     // prepare dir
-    const dir = buildDir(options.dir || []);
-    options.entry = path.join(dir.filepath, options.entry);
+    const resolve = makeDir(options.dir || "{}");
+    options.entry = resolve(options.entry);
     (Array.isArray(options.expect) ? options.expect : [options.expect])
       .forEach(o => {
         if (!o) return;
-        o.filename = path.join(dir.filepath, o.filename);
+        o.filename = resolve(o.filename);
       });
     return findConfig(options.entry, options)
       .then(result => {
@@ -45,16 +25,18 @@ describe("find config", () => {
   it("read js, json files", () =>
     test({
       config: [
-        "config.json", // the order of config would affect the order of the result
-        "config.js"
+        "config.js", // the order of the config would affect the order of the result
+        "config.json"
       ],
       findAll: true,
       entry: "dummy",
-      dir: [
-        "package.json",
-        ["config.js", "module.exports = {foo: 'foo'};"],
-        ["config.json", JSON.stringify({bar: "bar"})]
-      ],
+      dir: `
+        - package.json
+        - config.js: |
+            module.exports = {foo: "foo"};
+        - config.json: |
+            {"bar": "bar"}
+      `,
       expect: [
         {
           filename: "config.js",
@@ -72,11 +54,12 @@ describe("find config", () => {
     test({
       config: "config.js",
       entry: "foo/dummy",
-      dir: [
-        "package.json",
-        ["config.js", "exports.foo = 'foo'"],
-        ["foo", []]
-      ],
+      dir: `
+        - package.json
+        - config.js: |
+            exports.foo = 'foo';
+        - foo:
+      `,
       expect: {
         filename: "config.js",
         config: {foo: "foo"}
@@ -88,12 +71,12 @@ describe("find config", () => {
     test({
       config: "config.js",
       entry: "foo/dummy",
-      dir: [
-        ["config.js", "exports.foo = 'foo'"],
-        ["foo", [
-          "package.json"
-        ]]
-      ],
+      dir: `
+        - config.js: |
+            exports.foo = 'foo';
+        - foo:
+          - package.json
+      `,
       expect: null
     })
   );
