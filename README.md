@@ -53,7 +53,7 @@ This is a shortcut of `createConfigLocator(options).findConfig(file)`.
 
 ### FindConfigResult
 
-The result is an object `{filepath, config}` that `filepath` is the filename of the config and `config` is the object returned by the loader function registered in `options.extensions`.
+The result is an object `{filename, config}` that `filename` is the filename of the config and `config` is the object returned by the loader function registered in `options.extensions`.
 
 If `options.findAll` is `true` then it would be an array of result objects described above.
 

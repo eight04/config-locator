@@ -1,9 +1,9 @@
 const path = require("path");
-const fse = require("fs-extra");
+const fsAccess = require("util").promisify(require("fs").access);
 const requireAsync = require("node-require-async")(module);
 
 function tryAccess(file) {
-  return fse.access(file)
+  return fsAccess(file)
     .then(() => true)
     .catch(() => false);
 }
