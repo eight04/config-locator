@@ -147,6 +147,34 @@ describe("find config", () => {
     })
   );
   
+  it("stop at", () =>
+    test({
+      config: "config.js",
+      entry: "foo/bar/dummy",
+      dir: `
+        - config.js
+        - foo:
+          - config.js: |
+              exports.root = true;
+          - bar:
+            - config.js
+      `,
+      findAll: true,
+      stopAt: (dirname, pendingConfig) =>
+        pendingConfig.then(config => config.some(c => c && c.config && c.config.root)),
+      expect: [
+        {
+          filename: "foo/bar/config.js",
+          config: {}
+        },
+        {
+          filename: "foo/config.js",
+          config: {root: true}
+        }
+      ]
+    })
+  );
+  
   // it("cache", () => {
     // const {tryRequire, tryAccess} = require("../lib/conf");
     // const _tryRequire = sinon.spy(tryRequire);
