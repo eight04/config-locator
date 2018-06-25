@@ -50,6 +50,46 @@ describe("find config", () => {
     })
   );
   
+  it("read first", () =>
+    test({
+      config: [
+        "b.js",
+        "a.js"
+      ],
+      entry: "dummy",
+      dir: `
+        - package.json
+        - a.js: |
+            module.exports = "A";
+        - b.js: |
+            module.exports = "B";
+      `,
+      expect: {
+        filename: "b.js",
+        config: "B"
+      }
+    })
+  );
+  
+  it("read second", () =>
+    test({
+      config: [
+        "b.js",
+        "a.js"
+      ],
+      entry: "dummy",
+      dir: `
+        - package.json
+        - a.js: |
+            module.exports = "A";
+      `,
+      expect: {
+        filename: "a.js",
+        config: "A"
+      }
+    })
+  );
+  
   it("find in ancestor", () =>
     test({
       config: "config.js",
