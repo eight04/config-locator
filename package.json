@@ -1,0 +1,34 @@
+{
+  "name": "config-locator",
+  "version": "0.0.0",
+  "description": "Find the config file from ancestor folders.",
+  "author": "eight04 <eight04@gmail.com>",
+  "license": "MIT",
+  "keywords": [
+    "config",
+    "setting",
+    "find",
+    "finder"
+  ],
+  "scripts": {
+    "lint": "eslint **/*.js --ignore-pattern coverage --cache",
+    "nyc": "nyc --reporter=html mocha",
+    "test": "npm run lint && npm run nyc",
+    "preversion": "npm test",
+    "postversion": "git push --follow-tags && npm publish"
+  },
+  "files": [],
+  "main": "index.js",
+  "dependencies": {
+    "node-require-async": "^0.1.1"
+  },
+  "devDependencies": {
+    "codecov": "^3.0.2",
+    "eslint": "^4.19.1",
+    "mocha": "^5.2.0",
+    "mocha-context": "^0.1.2",
+    "nyc": "^11.8.0",
+    "sinon": "^5.0.7"
+  },
+  "repository": "eight04/config-locator"
+}
