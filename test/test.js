@@ -121,6 +121,24 @@ describe("find config", () => {
     })
   );
   
+  it("don't stop at package root", () =>
+    test({
+      config: "config.js",
+      entry: "foo/dummy",
+      stopAtRoot: false,
+      dir: `
+        - config.js: |
+            exports.foo = 'foo';
+        - foo:
+          - package.json
+      `,
+      expect: {
+        filename: "config.js",
+        config: {foo: "foo"}
+      }
+    })
+  );
+  
   it("stop at root", () =>
     test({
       config: "config.js",
