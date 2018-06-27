@@ -100,6 +100,6 @@ createConfigLocator(options: Object) => locator
 Changelog
 ---------
 
-* 0.1.0 (next)
+* 0.1.0 (Jun 27, 2018)
 
     - First release.
