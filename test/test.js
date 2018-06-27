@@ -1,12 +1,30 @@
 /* eslint-env mocha */
 const assert = require("assert");
-const {withDir} = require("tempdir-yaml");
-const {findConfig} = require("..");
+const fs = require("fs");
 
-describe("find config", () => {
+const sinon = require("sinon");
+const {withDir} = require("tempdir-yaml");
+
+const {findConfig, createConfigLocator} = require("..");
+
+const SUITS = [
+  {
+    title: "find config",
+    options: null
+  },
+  {
+    title: "find config no race",
+    options: {race: false}
+  }
+];
+
+for (const suit of SUITS) {
+  describe(suit.title, () => testFindConfig(suit.options));
+}
   
+function testFindConfig(DEFAULT_OPTIONS) {
   function test(options) {
-    // prepare dir
+    options = Object.assign({}, DEFAULT_OPTIONS, options);
     return withDir(options.dir, resolve => {
       options.entry = resolve(options.entry);
       (Array.isArray(options.expect) ? options.expect : [options.expect])
@@ -14,11 +32,20 @@ describe("find config", () => {
           if (!o) return;
           o.filename = resolve(o.filename);
         });
-      return findConfig(options.entry, options)
-        .then(result => {
-          assert.deepEqual(result, options.expect);
-        });
-    });
+      if (options.race !== false) {
+        const locator = createConfigLocator(options);
+        return locator.findConfig(options.entry)
+          .then(result =>
+            // make sure the files are closed
+            locator.close()
+              .then(() => result)
+          );
+      }
+      return findConfig(options.entry, options);
+    })
+      .then(result => {
+        assert.deepEqual(result, options.expect);
+      });
   }
   
   it("read js, json files", () =>
@@ -174,19 +201,40 @@ describe("find config", () => {
     })
   );
   
-  // it("cache", () => {
-    // const {tryRequire, tryAccess} = require("../lib/conf");
-    // const _tryRequire = sinon.spy(tryRequire);
-    // const _tryAccess = sinon.spy(tryAccess);
-    // const conf = createConfigLocator({_tryRequire, _tryAccess});
-    // return Promise.all([
-      // conf.findConfig(`${__dirname}/conf/test`),
-      // conf.findConfig(`${__dirname}/conf/b/test`)
-    // ])
-      // .then(([conf1, conf2]) => {
-        // assert.equal(conf1, conf2);
-        // assert(_tryRequire.calledTwice);
-        // assert(_tryAccess.calledTwice);
-      // });
-  // });
-});
+  it("cache", () =>
+    withDir(`
+      - package.json
+      - config.js
+    `, resolve => {
+      const loader = sinon.spy(filename => {
+        try {
+          return {
+            content: fs.readFileSync(filename, "utf8")
+          };
+        } catch(err) {
+          // pass
+        }
+      });
+      const locator = createConfigLocator({
+        config: "config.js",
+        extensions: {
+          ".js": loader
+        }
+      });
+      return Promise.all([
+        locator.findConfig(resolve("foo")),
+        locator.findConfig(resolve("bar"))
+      ])
+        .then(result => {
+          assert.equal(result[0].config.content, "");
+          assert.equal(result[0], result[1]);
+          assert(loader.calledOnce);
+          locator.clearCache();
+          return locator.findConfig("baz");
+        })
+        .then(() => {
+          assert(loader.calledTwice);
+        });
+    })
+  );
+}
