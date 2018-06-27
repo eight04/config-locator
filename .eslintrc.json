@@ -5,6 +5,7 @@
 	},
 	"rules": {
     "max-statements-per-line": 2,
+    "no-use-before-define": [2, "nofunc"],
 		"semi": [2, "always"]
 	},
 	"extends": [

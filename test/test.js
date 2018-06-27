@@ -1,25 +1,24 @@
 /* eslint-env mocha */
 const assert = require("assert");
-// const sinon = require("sinon");
-// const temp = require("temporarily");
-const {makeDir} = require("tempdir-yaml");
+const {withDir} = require("tempdir-yaml");
+const {findConfig} = require("..");
 
 describe("find config", () => {
-  const {findConfig} = require("..");
   
   function test(options) {
     // prepare dir
-    const resolve = makeDir(options.dir || "{}");
-    options.entry = resolve(options.entry);
-    (Array.isArray(options.expect) ? options.expect : [options.expect])
-      .forEach(o => {
-        if (!o) return;
-        o.filename = resolve(o.filename);
-      });
-    return findConfig(options.entry, options)
-      .then(result => {
-        assert.deepEqual(result, options.expect);
-      });
+    return withDir(options.dir, resolve => {
+      options.entry = resolve(options.entry);
+      (Array.isArray(options.expect) ? options.expect : [options.expect])
+        .forEach(o => {
+          if (!o) return;
+          o.filename = resolve(o.filename);
+        });
+      return findConfig(options.entry, options)
+        .then(result => {
+          assert.deepEqual(result, options.expect);
+        });
+    });
   }
   
   it("read js, json files", () =>

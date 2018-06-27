@@ -28,7 +28,7 @@
     "mocha": "^5.2.0",
     "nyc": "^11.8.0",
     "sinon": "^5.0.7",
-    "tempdir-yaml": "^0.1.0"
+    "tempdir-yaml": "^0.2.1"
   },
   "repository": "eight04/config-locator"
 }
